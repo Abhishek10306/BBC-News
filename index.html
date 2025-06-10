@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Headlines App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #bb1919;
+            color: white;
+            padding: 24px 32px;
+            border-bottom: 1px solid #a01616;
+        }
+
+        .header h1 {
+            font-size: 2.125rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            font-size: 1rem;
+            margin-top: 8px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .controls {
+            background: white;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            gap: 16px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 160px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+            font-size: 0.875rem;
+        }
+
+        select {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #bb1919;
+            box-shadow: 0 0 0 3px rgba(187, 25, 25, 0.1);
+        }
+
+        .fetch-btn {
+            padding: 8px 20px;
+            background: #bb1919;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            height: fit-content;
+        }
+
+        .fetch-btn:hover {
+            background: #a01616;
+        }
+
+        .fetch-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #6b7280;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 48px 32px;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid #bb1919;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1px;
+            background: #e5e7eb;
+            margin: 0;
+        }
+
+        .news-card {
+            background: white;
+            transition: background-color 0.15s ease;
+            border: none;
+        }
+
+        .news-card:hover {
+            background-color: #f9fafb;
+        }
+
+        .news-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #f3f4f6;
+            display: block;
+        }
+
+        .news-content {
+            padding: 16px;
+        }
+
+        .news-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-title:hover {
+            color: #bb1919;
+            cursor: pointer;
+        }
+
+        .news-description {
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-bottom: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .news-source {
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .news-date {
+            color: #6b7280;
+        }
+
+        .read-more {
+            color: #bb1919;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: color 0.15s ease;
+        }
+
+        .read-more:hover {
+            color: #a01616;
+            text-decoration: underline;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 16px;
+            margin: 24px 32px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 48px 32px;
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .main-content {
+            padding: 32px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 16px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.75rem;
+            }
+            
+            .controls {
+                padding: 16px 20px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .form-group {
+                min-width: auto;
+            }
+            
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .error {
+                margin: 16px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 12px 16px;
+            }
+            
+            .controls {
+                padding: 12px 16px;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+            
+            .news-content {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>BBC News</h1>
+            <p>Breaking news, sport, TV, radio and a whole lot more. The BBC informs, educates and entertains - wherever you are, whatever your age.</p>
+        </div>
+
+        <div class="controls">
+            <div class="form-group">
+                <label for="country">Region</label>
+                <select id="country">
+                    <option value="us">United States</option>
+                    <option value="gb">United Kingdom</option>
+                    <option value="ca">Canada</option>
+                    <option value="au">Australia</option>
+                    <option value="de">Germany</option>
+                    <option value="fr">France</option>
+                    <option value="it">Italy</option>
+                    <option value="es">Spain</option>
+                    <option value="nl">Netherlands</option>
+                    <option value="be">Belgium</option>
+                    <option value="at">Austria</option>
+                    <option value="ch">Switzerland</option>
+                    <option value="ie">Ireland</option>
+                    <option value="jp">Japan</option>
+                    <option value="kr">South Korea</option>
+                    <option value="cn">China</option>
+                    <option value="in">India</option>
+                    <option value="br">Brazil</option>
+                    <option value="mx">Mexico</option>
+                    <option value="ar">Argentina</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="category">News Category</label>
+                <select id="category">
+                    <option value="general">Top Stories</option>
+                    <option value="business">Business</option>
+                    <option value="entertainment">Entertainment & Arts</option>
+                    <option value="health">Health</option>
+                    <option value="science">Science & Environment</option>
+                    <option value="sports">Sport</option>
+                    <option value="technology">Technology</option>
+                </select>
+            </div>
+
+            <button class="fetch-btn" onclick="fetchNews()">Update</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            Loading news...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="news-container" class="news-grid"></div>
+    </div>
+
+    <script>
+        const API_KEY = 'b7c9f8e4399b4127992b56c1b002fa5a';
+        const BASE_URL = 'https://newsapi.org/v2/top-headlines';
+
+        async function fetchNews() {
+            const country = document.getElementById('country').value;
+            const category = document.getElementById('category').value;
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const newsContainer = document.getElementById('news-container');
+            const fetchBtn = document.querySelector('.fetch-btn');
+
+            // Show loading state
+            loadingDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+            newsContainer.innerHTML = '';
+            fetchBtn.disabled = true;
+
+            try {
+                // Use CORS proxy to bypass CORS restrictions
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const targetUrl = `${BASE_URL}?country=${country}&category=${category}&apiKey=${API_KEY}`;
+                const url = proxyUrl + encodeURIComponent(targetUrl);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    // If proxy fails, try direct request (might work in some environments)
+                    const directResponse = await fetch(targetUrl);
+                    if (!directResponse.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}. This might be a CORS issue. Try using the app from a local server.`);
+                    }
+                    const directData = await directResponse.json();
+                    if (directData.status !== 'ok') {
+                        throw new Error(directData.message || 'Failed to fetch news');
+                    }
+                    displayNews(directData.articles);
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.status !== 'ok') {
+                    throw new Error(data.message || 'Failed to fetch news');
+                }
+
+                displayNews(data.articles);
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                let errorMessage = error.message;
+                
+                // Provide helpful error messages
+                if (error.message.includes('CORS')) {
+                    errorMessage = 'CORS Error: NewsAPI blocks browser requests. Try running this app from a local server or use a backend service.';
+                } else if (error.message.includes('401')) {
+                    errorMessage = 'Unauthorized: Please check your API key.';
+                } else if (error.message.includes('429')) {
+                    errorMessage = 'Rate limit exceeded. Please wait and try again.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Network error: Please check your internet connection and try again.';
+                }
+                
+                errorDiv.innerHTML = `
+                    <strong>Error:</strong> ${errorMessage}<br><br>
+                    <strong>Troubleshooting tips:</strong><br>
+                    • Verify your API key is correct<br>
+                    • Check if you've exceeded your API rate limits<br>
+                    • Try running from a local server (not file://)<br>
+                    • Consider using a backend service for production apps
+                `;
+                errorDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+                fetchBtn.disabled = false;
+            }
+        }
+
+        function displayNews(articles) {
+            const newsContainer = document.getElementById('news-container');
+
+            if (!articles || articles.length === 0) {
+                newsContainer.innerHTML = '<div class="no-results">No news articles found for the selected country and category.</div>';
+                return;
+            }
+
+            const newsHTML = articles.map(article => {
+                const publishedDate = new Date(article.publishedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                const imageUrl = article.urlToImage || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect width="400" height="200" fill="%23f5f7fa"/><text x="200" y="100" text-anchor="middle" dy=".3em" fill="%23667eea" font-family="Arial" font-size="16">No Image Available</text></svg>';
+
+                return `
+                    <div class="news-card">
+                        <img src="${imageUrl}" alt="${article.title}" class="news-image" onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;400&quot; height=&quot;200&quot; viewBox=&quot;0 0 400 200&quot;><rect width=&quot;400&quot; height=&quot;200&quot; fill=&quot;%23f5f7fa&quot;/><text x=&quot;200&quot; y=&quot;100&quot; text-anchor=&quot;middle&quot; dy=&quot;.3em&quot; fill=&quot;%23667eea&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot;>No Image Available</text></svg>'">
+                        <div class="news-content">
+                            <h3 class="news-title">${article.title}</h3>
+                            <p class="news-description">${article.description || 'No description available.'}</p>
+                            <div class="news-meta">
+                                <span class="news-source">${article.source.name}</span>
+                                <span class="news-date">${publishedDate}</span>
+                            </div>
+                            <a href="${article.url}" target="_blank" class="read-more">Read Full Article</a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            newsContainer.innerHTML = newsHTML;
+        }
+
+        // Load initial news on page load
+        window.addEventListener('load', () => {
+            fetchNews();
+        });
+
+        // Add enter key support
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchNews();
+            }
+        });
+    </script>
+</body>
+</html>
